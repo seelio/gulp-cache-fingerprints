@@ -1,0 +1,16 @@
+{
+  "name": "gulp-cache-fingerprints",
+  "version": "0.0.9",
+  "description": "Caches the git hashes of source files",
+  "main": "build/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "nodegit": "^0.3.1",
+    "through2": "^0.6.3",
+    "verror": "^1.6.0"
+  }
+}
