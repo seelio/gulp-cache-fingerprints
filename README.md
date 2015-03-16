@@ -14,6 +14,8 @@ This is a part of our solution for asset caching.
 ## Usage
 
 ```coffee
+# gulpfile.coffee
+
 cacheFingerprints = require("gulp-cache-fingerprints")
 
 gulp.task "fingerprint", ->
@@ -23,7 +25,7 @@ gulp.task "fingerprint", ->
 
   opts =
     root: __dirname.toString()
-    base: __dirname.toString()
+    build: "build"
 
   gulp.src(srcs)
     .pipe(cacheFingerprints(opts))
@@ -35,15 +37,15 @@ gulp.task "fingerprint", ->
 
 This must be the absolute path to your git working directory.
 
-#### `opts.base` (optional)
-
-**Default: public**
-
 #### `opts.build` (optional)
 
 This should be the relative path from `opts.root` to your build directory.
 You only need to set this if you have a build directory,
 and if your build directory and working directory are different.
+
+#### `opts.base` (optional)
+
+**Default: public**
 
 #### `opts.output` (optional)
 
