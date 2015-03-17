@@ -1,6 +1,6 @@
 {
   "name": "gulp-cache-fingerprints",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Caches the git hashes of source files",
   "main": "build/index.js",
   "scripts": {
