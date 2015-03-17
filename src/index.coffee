@@ -2,72 +2,46 @@ fs = require("fs")
 path = require("path")
 
 through = require("through2")
-git = require("nodegit")
-WError = require("verror").WError
-crypto = require("crypto")
+gutil = require("gulp-util")
 
 Options = require("./lib/options")
-
-abspathToWorkingDir = (repo) ->
-  repo.path().replace(new RegExp("\.git/?$"), "")
+Git = require("./lib/git")
+Sha = require("./lib/sha")
+Cache = require("./lib/cache")
 
 relpathToFile = (filePath, workingPath, basePath) ->
-  filePath \
+  filePath
     .replace(new RegExp("^#{workingPath}/?"), "")
-    .replace(new RegExp("^#{basePath}/?"), "")
 
 module.exports = (opts = {}) ->
   options = new Options(opts)
-
-  cache = {}
-  repo = null
-  commit = null
-  workingDir = null
-
-  setupGitVars = (done) ->
-    git.Repository.open(options.root)
-      .then (_repo) ->
-        repo = _repo
-        workingDir = abspathToWorkingDir(repo)
-        repo.head()
-
-      .then (ref) ->
-        hashOfHEAD = ref.target().tostrS()
-        repo.getCommit(hashOfHEAD)
-
-      .then (_commit) ->
-        commit = _commit
-
-      .catch (err) ->
-        done(new WError(err, "couldn't read git repository"))
-
-      .done ->
-        done()
+  git = new Git(options)
+  sha = new Sha
+  cache = new Cache(options)
 
   getTheHash = (file, done) ->
-    fileRelpath = relpathToFile(file.path, workingDir, options.base)
+    fileRelpath = relpathToFile(file.path, git.abspathToWorkingDir())
 
     found = (entry) ->
       # In this case, the hashing is done for us
-      cache[fileRelpath] = entry.sha()
+      cache.set(fileRelpath, entry.sha())
       done()
 
     notFound = (err) ->
       # In this case, we need to hash manually
-      shaHasher = crypto.createHash("sha1")
-
       if file.isBuffer()
-        shaHasher.update(file.contents)
-        digest = shaHasher.digest("hex")
-
-        cache[fileRelpath] = digest
+        digest = sha.digest(file.contents)
+        cache.set(fileRelpath, digest)
         done()
 
       else if file.isStream()
         done(new Error("streams aren't supported"))
 
-    commit.getEntry(fileRelpath)
-      .then(found, notFound)
+    git.getFile fileRelpath, (err, file) ->
+      if file?
+        found(file)
+      else
+        notFound()
 
   transformHelper = (file, enc, done) ->
     getTheHash(file, done)
@@ -79,20 +53,18 @@ module.exports = (opts = {}) ->
     if file.isNull()
       return done(new Error("file is null, can't hash"))
 
-    if repo
+    if git.repo
       transformHelper(file, enc, done)
     else
-      setupGitVars (err) ->
+      git.initialize (err) ->
         return done(err) if err
 
         transformHelper(file, enc, done)
 
   flush = (done) ->
-    keys = Object.keys(cache)
-    filepath = path.resolve(options.root, options.output)
-
-    fs.writeFile filepath, JSON.stringify(cache), (err) ->
-      console.log("wrote #{keys.length} hashes", filepath)
+    cache.write (err) ->
+      return done(err) if err?
+      gutil.log("Cached #{cache.keys().length} hashes to #{cache.cachePath()}")
       done()
 
 

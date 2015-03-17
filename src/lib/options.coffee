@@ -14,6 +14,8 @@ class Options
 
       Object.defineProperty(@, key, opts)
 
+    Object.freeze(@options)
+
   defaults:
     root:   null
     build:  null

@@ -22,6 +22,7 @@
         };
         Object.defineProperty(this, key, opts);
       }
+      Object.freeze(this.options);
     }
 
     Options.prototype.defaults = {
