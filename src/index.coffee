@@ -6,9 +6,8 @@ Git = require("./lib/git")
 Sha = require("./lib/sha")
 Cache = require("./lib/cache")
 
-relpathToFile = (filePath, workingPath, basePath) ->
-  filePath
-    .replace(new RegExp("^#{workingPath}/?"), "")
+relpathToFile = (filePath, workingPath) ->
+  filePath.replace(new RegExp("^#{workingPath}/?"), "")
 
 module.exports = (opts = {}) ->
   options = new Options(opts)
@@ -16,7 +15,7 @@ module.exports = (opts = {}) ->
   sha = new Sha
   cache = new Cache(options)
 
-  getTheHash = (file, done) ->
+  transformHelper = (file, enc, done) ->
     fileRelpath = relpathToFile(file.path, git.abspathToWorkingDir())
 
     found = (entry) ->
@@ -38,12 +37,10 @@ module.exports = (opts = {}) ->
       else
         notFound()
 
-  transformHelper = (file, enc, done) ->
-    getTheHash(file, done)
 
   transform = (file, enc, done) ->
-    if file.isDirectory()
-      return done()
+    # Silently ignore directories
+    return done() if file.isDirectory()
 
     if git.repo
       transformHelper(file, enc, done)

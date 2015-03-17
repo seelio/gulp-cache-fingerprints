@@ -14,12 +14,12 @@
 
   Cache = require("./lib/cache");
 
-  relpathToFile = function(filePath, workingPath, basePath) {
+  relpathToFile = function(filePath, workingPath) {
     return filePath.replace(new RegExp("^" + workingPath + "/?"), "");
   };
 
   module.exports = function(opts) {
-    var cache, flush, getTheHash, git, options, sha, transform, transformHelper;
+    var cache, flush, git, options, sha, transform, transformHelper;
     if (opts == null) {
       opts = {};
     }
@@ -27,7 +27,7 @@
     git = new Git(options);
     sha = new Sha;
     cache = new Cache(options);
-    getTheHash = function(file, done) {
+    transformHelper = function(file, enc, done) {
       var fileRelpath, found, notFound;
       fileRelpath = relpathToFile(file.path, git.abspathToWorkingDir());
       found = function(entry) {
@@ -50,9 +50,6 @@
           return notFound();
         }
       });
-    };
-    transformHelper = function(file, enc, done) {
-      return getTheHash(file, done);
     };
     transform = function(file, enc, done) {
       if (file.isDirectory()) {
