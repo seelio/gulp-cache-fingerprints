@@ -1,6 +1,3 @@
-fs = require("fs")
-path = require("path")
-
 through = require("through2")
 gutil = require("gulp-util")
 
@@ -28,14 +25,12 @@ module.exports = (opts = {}) ->
       done()
 
     notFound = (err) ->
-      # In this case, we need to hash manually
-      if file.isBuffer()
-        digest = sha.digest(file.contents)
-        cache.set(fileRelpath, digest)
-        done()
+      return done(new Error("only file buffers are supported")) unless file.isBuffer()
 
-      else if file.isStream()
-        done(new Error("streams aren't supported"))
+      # In this case, we need to hash manually
+      digest = sha.digest(file.contents)
+      cache.set(fileRelpath, digest)
+      done()
 
     git.getFile fileRelpath, (err, file) ->
       if file?
@@ -49,9 +44,6 @@ module.exports = (opts = {}) ->
   transform = (file, enc, done) ->
     if file.isDirectory()
       return done()
-
-    if file.isNull()
-      return done(new Error("file is null, can't hash"))
 
     if git.repo
       transformHelper(file, enc, done)
