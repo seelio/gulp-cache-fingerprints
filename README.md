@@ -47,6 +47,8 @@ and if your build directory and working directory are different.
 
 **Default: public**
 
+This should be the relative path from `opts.build` to your public assets directory.
+
 #### `opts.output` (optional)
 
 **Default: .fingerprint-cache.json**
