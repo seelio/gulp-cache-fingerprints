@@ -18,24 +18,24 @@ module.exports = (opts = {}) ->
   transformHelper = (file, enc, done) ->
     fileRelpath = relpathToFile(file.path, git.abspathToWorkingDir())
 
-    found = (entry) ->
-      # In this case, the hashing is done for us
+    # In this case, the hashing is already done for us
+    fileCheckedIn = (entry) ->
       cache.set(fileRelpath, entry.sha())
       done()
 
-    notFound = (err) ->
+    # In this case, we need to hash manually
+    notCheckedIn = (err) ->
       return done(new Error("only file buffers are supported")) unless file.isBuffer()
 
-      # In this case, we need to hash manually
       digest = sha.digest(file.contents)
       cache.set(fileRelpath, digest)
       done()
 
     git.getFile fileRelpath, (err, file) ->
       if file?
-        found(file)
+        fileCheckedIn(file)
       else
-        notFound()
+        notCheckedIn()
 
 
   transform = (file, enc, done) ->

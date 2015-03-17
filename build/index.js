@@ -28,13 +28,13 @@
     sha = new Sha;
     cache = new Cache(options);
     transformHelper = function(file, enc, done) {
-      var fileRelpath, found, notFound;
+      var fileCheckedIn, fileRelpath, notCheckedIn;
       fileRelpath = relpathToFile(file.path, git.abspathToWorkingDir());
-      found = function(entry) {
+      fileCheckedIn = function(entry) {
         cache.set(fileRelpath, entry.sha());
         return done();
       };
-      notFound = function(err) {
+      notCheckedIn = function(err) {
         var digest;
         if (!file.isBuffer()) {
           return done(new Error("only file buffers are supported"));
@@ -45,9 +45,9 @@
       };
       return git.getFile(fileRelpath, function(err, file) {
         if (file != null) {
-          return found(file);
+          return fileCheckedIn(file);
         } else {
-          return notFound();
+          return notCheckedIn();
         }
       });
     };
