@@ -1,9 +1,9 @@
 crypto = require("crypto")
 
-class Sha
+class ShaHasher
   constructor: ->
 
-  digest: (buffer) ->
+  hash: (buffer) ->
     shaHasher = crypto.createHash("sha1")
 
     shaHasher.update(buffer)
