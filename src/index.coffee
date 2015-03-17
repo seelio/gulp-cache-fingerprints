@@ -3,39 +3,34 @@ gutil = require("gulp-util")
 
 Options = require("./lib/options")
 Git = require("./lib/git")
-Sha = require("./lib/sha")
 Cache = require("./lib/cache")
+
+GitHasher = require("./lib/hashers/git")
+ShaHasher = require("./lib/hashers/sha")
 
 relpathToFile = (filePath, workingPath) ->
   filePath.replace(new RegExp("^#{workingPath}/?"), "")
 
 module.exports = (opts = {}) ->
   options = new Options(opts)
-  git = new Git(options)
-  sha = new Sha
   cache = new Cache(options)
+  git = new Git(options)
+  githasher = new GitHasher
+  shahasher = new ShaHasher
 
   transformHelper = (file, enc, done) ->
     fileRelpath = relpathToFile(file.path, git.abspathToWorkingDir())
 
-    # In this case, the hashing is already done for us
-    fileCheckedIn = (entry) ->
-      cache.set(fileRelpath, entry.sha())
+    cacheTheHash = (err, hash) ->
+      return done(err) if err?
+      cache.set(fileRelpath, hash)
       done()
 
-    # In this case, we need to hash manually
-    notCheckedIn = (err) ->
-      return done(new Error("only file buffers are supported")) unless file.isBuffer()
-
-      digest = sha.digest(file.contents)
-      cache.set(fileRelpath, digest)
-      done()
-
-    git.getFile fileRelpath, (err, file) ->
-      if file?
-        fileCheckedIn(file)
+    git.getFile fileRelpath, (err, gitEntry) ->
+      if gitEntry?
+        githasher.hash(file, gitEntry, cacheTheHash)
       else
-        notCheckedIn()
+        shahasher.hash(file, gitEntry, cacheTheHash)
 
 
   transform = (file, enc, done) ->

@@ -3,11 +3,12 @@ crypto = require("crypto")
 class ShaHasher
   constructor: ->
 
-  hash: (buffer) ->
+  hash: (file, entry, done) ->
+    return done(new Error("only file buffers are supported")) unless file.isBuffer()
+
     shaHasher = crypto.createHash("sha1")
+    shaHasher.update(file.contents)
+    done(null, shaHasher.digest("hex"))
 
-    shaHasher.update(buffer)
-    shaHasher.digest("hex")
 
-
-module.exports = Sha
+module.exports = ShaHasher
