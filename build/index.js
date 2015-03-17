@@ -20,8 +20,8 @@
     return repo.path().replace(new RegExp("\.git/?$"), "");
   };
 
-  relpathToFile = function(fileAbspath, workingDir) {
-    return fileAbspath.replace(new RegExp("^" + workingDir), "");
+  relpathToFile = function(filePath, workingPath, basePath) {
+    return filePath.replace(new RegExp("^" + workingPath + "/?"), "").replace(new RegExp("^" + basePath + "/?"), "");
   };
 
   module.exports = function(opts) {
@@ -30,11 +30,14 @@
       opts = {};
     }
     defaults = {
-      output: "./.fingerprint-cache.json",
-      base: null,
-      root: null
+      root: null,
+      build: null,
+      base: "public",
+      output: ".fingerprint-cache.json"
     };
     options = computeOptions(defaults, opts);
+    options.build || (options.build = options.root);
+    options.basepath = path.resolve(options.build, options.base);
     cache = {};
     repo = null;
     commit = null;
@@ -58,7 +61,7 @@
     };
     getTheHash = function(file, done) {
       var fileRelpath, found, notFound;
-      fileRelpath = relpathToFile(file.path, workingDir);
+      fileRelpath = relpathToFile(file.path, workingDir, options.base);
       found = function(entry) {
         cache[fileRelpath] = entry.sha();
         return done();

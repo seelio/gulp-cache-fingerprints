@@ -12,16 +12,22 @@ computeOptions = require("./lib/compute_options")
 abspathToWorkingDir = (repo) ->
   repo.path().replace(new RegExp("\.git/?$"), "")
 
-relpathToFile = (fileAbspath, workingDir) ->
-  fileAbspath.replace(new RegExp("^#{workingDir}"), "")
+relpathToFile = (filePath, workingPath, basePath) ->
+  filePath \
+    .replace(new RegExp("^#{workingPath}/?"), "")
+    .replace(new RegExp("^#{basePath}/?"), "")
 
 module.exports = (opts = {}) ->
   defaults =
-    output: "./.fingerprint-cache.json"
-    base: null
-    root: null
+    root:   null
+    build:  null
+    base:   "public"
+    output: ".fingerprint-cache.json"
 
   options = computeOptions(defaults, opts)
+
+  options.build ||= options.root
+  options.basepath = path.resolve(options.build, options.base)
 
   cache = {}
   repo = null
@@ -49,7 +55,7 @@ module.exports = (opts = {}) ->
         done()
 
   getTheHash = (file, done) ->
-    fileRelpath = relpathToFile(file.path, workingDir)
+    fileRelpath = relpathToFile(file.path, workingDir, options.base)
 
     found = (entry) ->
       # In this case, the hashing is done for us
