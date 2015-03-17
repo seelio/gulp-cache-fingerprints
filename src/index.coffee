@@ -6,8 +6,7 @@ git = require("nodegit")
 WError = require("verror").WError
 crypto = require("crypto")
 
-computeOptions = require("./lib/compute_options")
-
+Options = require("./lib/options")
 
 abspathToWorkingDir = (repo) ->
   repo.path().replace(new RegExp("\.git/?$"), "")
@@ -18,16 +17,7 @@ relpathToFile = (filePath, workingPath, basePath) ->
     .replace(new RegExp("^#{basePath}/?"), "")
 
 module.exports = (opts = {}) ->
-  defaults =
-    root:   null
-    build:  null
-    base:   "public"
-    output: ".fingerprint-cache.json"
-
-  options = computeOptions(defaults, opts)
-
-  options.build ||= options.root
-  options.basepath = path.resolve(options.build, options.base)
+  options = new Options(opts)
 
   cache = {}
   repo = null
