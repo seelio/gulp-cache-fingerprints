@@ -10,7 +10,7 @@ class Git
         @repo.head()
 
       .then (ref) =>
-        hashOfHEAD = ref.target().tostrS()
+        hashOfHEAD = ref.target().toString()
         @repo.getCommit(hashOfHEAD)
 
       .then (@commit) =>
